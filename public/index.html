@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Rokt Daily</title>
+<style>
+  :root {
+    --bg: #0c0d12;
+    --panel: #14161f;
+    --panel-2: #191c28;
+    --border: #242838;
+    --ink: #e8eaf2;
+    --muted: #8b91a7;
+    --faint: #5a6075;
+    --accent: #6b7aff;
+    --accent-soft: #2a2f55;
+    --danger: #ff5a6a;
+    --ok: #46d39a;
+    --radius: 14px;
+    --serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: radial-gradient(1200px 600px at 70% -10%, #1a1d2e 0%, var(--bg) 55%);
+    color: var(--ink);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 28px 20px 140px;
+  }
+
+  /* Header */
+  header.top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+  .brand {
+    font-weight: 800;
+    font-size: 20px;
+    letter-spacing: -0.4px;
+  }
+  .brand .dot { color: var(--accent); }
+  .date {
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .ghost-btn {
+    background: var(--panel-2);
+    color: var(--ink);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+  }
+  .ghost-btn:hover { border-color: var(--accent); }
+
+  /* Brief card */
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 22px;
+  }
+  .card .card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 22px;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel-2);
+  }
+  .card-head h2 {
+    margin: 0;
+    font-size: 13px;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+  }
+  .listen {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .listen:disabled { opacity: .4; cursor: default; }
+  .brief-body {
+    padding: 6px 26px 24px;
+    font-family: var(--serif);
+    font-size: 17px;
+    line-height: 1.72;
+    color: #dfe2ee;
+  }
+  .brief-body h1 { font-size: 24px; margin: 22px 0 6px; color: #fff; font-family: var(--sans); }
+  .brief-body h2 { font-size: 18px; margin: 22px 0 6px; color: #fff; font-family: var(--sans);
+    border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+  .brief-body h3 { font-size: 15px; margin: 16px 0 4px; color: var(--accent); font-family: var(--sans); }
+  .brief-body ul { padding-left: 22px; }
+  .brief-body li { margin: 6px 0; }
+  .brief-body strong { color: #fff; }
+  .brief-body code { background: var(--accent-soft); padding: 1px 6px; border-radius: 4px; font-size: 14px; }
+  .muted-note { color: var(--faint); font-size: 14px; font-style: italic; }
+
+  /* Chat */
+  .chat-log { display: flex; flex-direction: column; gap: 12px; margin-bottom: 18px; }
+  .bubble {
+    max-width: 86%;
+    padding: 12px 16px;
+    border-radius: 14px;
+    font-size: 15px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+  }
+  .bubble.user {
+    align-self: flex-end;
+    background: var(--accent);
+    color: #fff;
+    border-bottom-right-radius: 4px;
+  }
+  .bubble.bot {
+    align-self: flex-start;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-bottom-left-radius: 4px;
+  }
+  .bubble.typing { color: var(--muted); font-style: italic; }
+
+  /* Composer */
+  .composer {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: linear-gradient(180deg, rgba(12,13,18,0) 0%, var(--bg) 28%);
+    padding: 18px 20px 22px;
+  }
+  .composer-inner {
+    max-width: 760px;
+    margin: 0 auto;
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+  }
+  textarea#input {
+    flex: 1;
+    resize: none;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15px;
+    padding: 13px 15px;
+    min-height: 50px;
+    max-height: 140px;
+    outline: none;
+  }
+  textarea#input:focus { border-color: var(--accent); }
+  .icon-btn {
+    width: 50px; height: 50px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--panel-2);
+    color: var(--ink);
+    font-size: 19px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex: 0 0 auto;
+  }
+  .icon-btn.send { background: var(--accent); border-color: var(--accent); }
+  .icon-btn.recording { background: var(--danger); border-color: var(--danger); animation: pulse 1.1s infinite; }
+  @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(255,90,106,.5);} 50%{ box-shadow:0 0 0 8px rgba(255,90,106,0);} }
+
+  /* Interview modal */
+  .modal-bg {
+    position: fixed; inset: 0;
+    background: rgba(6,7,11,.78);
+    backdrop-filter: blur(6px);
+    display: none;
+    align-items: center; justify-content: center;
+    z-index: 50;
+  }
+  .modal-bg.show { display: flex; }
+  .modal {
+    width: min(560px, 92vw);
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 30px 30px 26px;
+    text-align: center;
+  }
+  .modal h3 { margin: 0 0 6px; font-size: 13px; letter-spacing: 1.4px; text-transform: uppercase; color: var(--accent); }
+  .modal .progress { color: var(--muted); font-size: 13px; margin-bottom: 18px; }
+  .modal .qtext { font-family: var(--serif); font-size: 21px; line-height: 1.5; margin: 0 0 26px; }
+  .modal .controls { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .modal .status { color: var(--muted); font-size: 13px; margin-top: 16px; min-height: 18px; }
+  .primary-btn {
+    background: var(--accent); color: #fff; border: none;
+    border-radius: 999px; padding: 12px 24px; font-size: 14px; font-weight: 700; cursor: pointer;
+  }
+  .primary-btn:disabled { opacity: .4; cursor: default; }
+  .danger-btn { background: var(--danger); }
+  .close-x {
+    position: absolute; top: 18px; right: 22px;
+    background: none; border: none; color: var(--muted); font-size: 22px; cursor: pointer;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <div>
+        <div class="brand">Rokt Daily<span class="dot">.</span></div>
+        <div class="date" id="dateLabel"></div>
+      </div>
+      <button class="ghost-btn" id="interviewBtn">🎙 Quarterly Interview</button>
+    </header>
+
+    <!-- Today's brief -->
+    <section class="card">
+      <div class="card-head">
+        <h2>This Morning</h2>
+        <button class="listen" id="listenBtn" disabled>▶ Listen</button>
+      </div>
+      <div class="brief-body" id="briefBody">
+        <p class="muted-note">Loading your brief…</p>
+      </div>
+    </section>
+
+    <!-- Chat -->
+    <div class="chat-log" id="chatLog"></div>
+  </div>
+
+  <!-- Composer -->
+  <div class="composer">
+    <div class="composer-inner">
+      <textarea id="input" placeholder="Ask anything about today…" rows="1"></textarea>
+      <button class="icon-btn" id="micBtn" title="Ask by voice">🎤</button>
+      <button class="icon-btn send" id="sendBtn" title="Send">➤</button>
+    </div>
+  </div>
+
+  <!-- Interview modal -->
+  <div class="modal-bg" id="modalBg">
+    <div class="modal" style="position:relative;">
+      <button class="close-x" id="closeModal">×</button>
+      <h3>Quarterly Interview</h3>
+      <div class="progress" id="ivProgress"></div>
+      <p class="qtext" id="ivQuestion">Let's tune your brief.</p>
+      <div class="controls" id="ivControls">
+        <button class="primary-btn" id="ivStart">Begin</button>
+      </div>
+      <div class="status" id="ivStatus"></div>
+    </div>
+  </div>
+
+<audio id="player" hidden></audio>
+
+<script>
+// ── Config ──────────────────────────────────────────────────────────────────
+// Single-exec deployment: set the CCO's email here (matches BRIEFING_EMAIL_TO).
+const EXEC_EMAIL = localStorage.getItem('roktDailyExec') || 'cco@rokt.com';
+let SESSION_ID = localStorage.getItem('roktDailySession') || crypto.randomUUID();
+localStorage.setItem('roktDailySession', SESSION_ID);
+
+const $ = (id) => document.getElementById(id);
+$('dateLabel').textContent = new Date().toLocaleDateString('en-US',
+  { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+
+// ── Tiny markdown → HTML renderer (headings, bold, code, lists, paragraphs) ──
+function renderMarkdown(md) {
+  const esc = (s) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const lines = (md || '').split('\n');
+  let html = '', inList = false;
+  const inline = (t) => esc(t)
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>');
+  for (let raw of lines) {
+    const line = raw.trimEnd();
+    const li = line.match(/^\s*[-*]\s+(.*)/);
+    if (li) {
+      if (!inList) { html += '<ul>'; inList = true; }
+      html += '<li>' + inline(li[1]) + '</li>';
+      continue;
+    }
+    if (inList) { html += '</ul>'; inList = false; }
+    if (/^###\s+/.test(line))      html += '<h3>' + inline(line.replace(/^###\s+/, '')) + '</h3>';
+    else if (/^##\s+/.test(line))  html += '<h2>' + inline(line.replace(/^##\s+/, '')) + '</h2>';
+    else if (/^#\s+/.test(line))   html += '<h1>' + inline(line.replace(/^#\s+/, '')) + '</h1>';
+    else if (line.trim() === '')   html += '';
+    else                            html += '<p>' + inline(line) + '</p>';
+  }
+  if (inList) html += '</ul>';
+  return html;
+}
+
+// ── Load today's brief ────────────────────────────────────────────────────────
+let audioUrl = null;
+async function loadBrief() {
+  try {
+    const res = await fetch('/brief/today?execEmail=' + encodeURIComponent(EXEC_EMAIL));
+    if (!res.ok) {
+      $('briefBody').innerHTML = '<p class="muted-note">No brief has been generated yet today. Check back after 6:30 AM.</p>';
+      return;
+    }
+    const data = await res.json();
+    $('briefBody').innerHTML = renderMarkdown(data.briefMd);
+    if (data.audioUrl) {
+      audioUrl = data.audioUrl;
+      $('listenBtn').disabled = false;
+    }
+  } catch (e) {
+    $('briefBody').innerHTML = '<p class="muted-note">Could not load the brief.</p>';
+  }
+}
+
+// ── Listen button ──────────────────────────────────────────────────────────────
+const player = $('player');
+$('listenBtn').addEventListener('click', () => {
+  if (!audioUrl) return;
+  if (!player.paused) { player.pause(); $('listenBtn').innerHTML = '▶ Listen'; return; }
+  player.src = audioUrl;
+  player.play();
+  $('listenBtn').innerHTML = '❚❚ Pause';
+});
+player.addEventListener('ended', () => { $('listenBtn').innerHTML = '▶ Listen'; });
+
+// ── Chat ─────────────────────────────────────────────────────────────────────
+function addBubble(text, who) {
+  const div = document.createElement('div');
+  div.className = 'bubble ' + who;
+  div.innerHTML = who === 'bot' ? renderMarkdown(text) : text.replace(/</g, '&lt;');
+  $('chatLog').appendChild(div);
+  div.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  return div;
+}
+
+async function sendText(message) {
+  if (!message.trim()) return;
+  addBubble(message, 'user');
+  $('input').value = '';
+  autosize();
+  const typing = addBubble('Thinking…', 'bot');
+  typing.classList.add('typing');
+  try {
+    const res = await fetch('/qa', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ execEmail: EXEC_EMAIL, sessionId: SESSION_ID, message }),
+    });
+    const data = await res.json();
+    typing.remove();
+    if (!res.ok) { addBubble('⚠ ' + (data.error || 'Something went wrong.'), 'bot'); return; }
+    if (data.sessionId) { SESSION_ID = data.sessionId; localStorage.setItem('roktDailySession', SESSION_ID); }
+    addBubble(data.answer, 'bot');
+  } catch (e) {
+    typing.remove();
+    addBubble('⚠ Network error.', 'bot');
+  }
+}
+
+$('sendBtn').addEventListener('click', () => sendText($('input').value));
+$('input').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendText($('input').value); }
+});
+function autosize() {
+  const el = $('input');
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 140) + 'px';
+}
+$('input').addEventListener('input', autosize);
+
+// ── Voice question (mic) ────────────────────────────────────────────────────────
+let mediaRecorder = null, chunks = [], recording = false;
+
+async function startRecording(onStop) {
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  mediaRecorder = new MediaRecorder(stream);
+  chunks = [];
+  mediaRecorder.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
+  mediaRecorder.onstop = () => {
+    stream.getTracks().forEach(t => t.stop());
+    onStop(new Blob(chunks, { type: mediaRecorder.mimeType || 'audio/webm' }));
+  };
+  mediaRecorder.start();
+}
+function stopRecording() {
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+}
+
+$('micBtn').addEventListener('click', async () => {
+  if (recording) {
+    stopRecording();
+    recording = false;
+    $('micBtn').classList.remove('recording');
+    return;
+  }
+  try {
+    await startRecording(async (blob) => {
+      const typing = addBubble('Transcribing…', 'bot');
+      typing.classList.add('typing');
+      const fd = new FormData();
+      fd.append('audio', blob, 'question.webm');
+      fd.append('execEmail', EXEC_EMAIL);
+      fd.append('sessionId', SESSION_ID);
+      try {
+        const res = await fetch('/qa/voice', { method: 'POST', body: fd });
+        const data = await res.json();
+        typing.remove();
+        if (!res.ok) { addBubble('⚠ ' + (data.error || 'Voice failed.'), 'bot'); return; }
+        addBubble(data.transcript || '🎤', 'user');
+        if (data.sessionId) { SESSION_ID = data.sessionId; localStorage.setItem('roktDailySession', SESSION_ID); }
+        addBubble(data.answer, 'bot');
+      } catch (e) { typing.remove(); addBubble('⚠ Network error.', 'bot'); }
+    });
+    recording = true;
+    $('micBtn').classList.add('recording');
+  } catch (e) {
+    addBubble('⚠ Microphone access denied.', 'bot');
+  }
+});
+
+// ── Quarterly interview flow ─────────────────────────────────────────────────────
+let ivQuestions = [], ivIndex = 0, ivAnswers = [];
+
+$('interviewBtn').addEventListener('click', openInterview);
+$('closeModal').addEventListener('click', () => $('modalBg').classList.remove('show'));
+
+async function openInterview() {
+  $('modalBg').classList.add('show');
+  $('ivQuestion').textContent = 'Loading your questions…';
+  $('ivControls').innerHTML = '';
+  $('ivStatus').textContent = '';
+  try {
+    const res = await fetch('/interview/questions');
+    const data = await res.json();
+    ivQuestions = data.questions || [];
+    ivIndex = 0; ivAnswers = [];
+    $('ivQuestion').textContent = "I'll ask a few questions and listen to your answers. Ready?";
+    $('ivProgress').textContent = ivQuestions.length + ' questions · ~10 min';
+    $('ivControls').innerHTML = '<button class="primary-btn" id="ivStart">Begin</button>';
+    $('ivStart').addEventListener('click', presentQuestion);
+  } catch (e) {
+    $('ivQuestion').textContent = 'Could not load the interview.';
+  }
+}
+
+async function presentQuestion() {
+  if (ivIndex >= ivQuestions.length) return finishInterview();
+  const q = ivQuestions[ivIndex];
+  $('ivProgress').textContent = `Question ${ivIndex + 1} of ${ivQuestions.length}`;
+  $('ivQuestion').textContent = q.text;
+  $('ivControls').innerHTML = '';
+  $('ivStatus').textContent = '';
+
+  // Play the question audio (if available), then auto-arm recording.
+  if (q.audioUrl) {
+    $('ivStatus').textContent = '🔊 Playing question…';
+    player.src = q.audioUrl;
+    try { await player.play(); await new Promise(r => { player.onended = r; }); } catch (e) { /* ignore */ }
+  }
+  armRecordButton(q);
+}
+
+function armRecordButton(q) {
+  $('ivStatus').textContent = 'Tap to record your answer.';
+  $('ivControls').innerHTML = '<button class="primary-btn" id="ivRec">● Record answer</button>';
+  $('ivRec').addEventListener('click', async () => {
+    const btn = $('ivRec');
+    if (btn.dataset.state === 'rec') {
+      stopRecording();
+      btn.disabled = true;
+      $('ivStatus').textContent = 'Transcribing…';
+      return;
+    }
+    try {
+      await startRecording(async (blob) => {
+        const fd = new FormData();
+        fd.append('audio', blob, 'answer.webm');
+        fd.append('execEmail', EXEC_EMAIL);
+        fd.append('questionId', q.id);
+        try {
+          const res = await fetch('/interview/answer', { method: 'POST', body: fd });
+          const data = await res.json();
+          if (res.ok) {
+            ivAnswers.push({ questionId: q.id, transcript: data.transcript });
+            ivIndex++;
+            presentQuestion();
+          } else {
+            $('ivStatus').textContent = '⚠ ' + (data.error || 'Failed.');
+            armRecordButton(q);
+          }
+        } catch (e) {
+          $('ivStatus').textContent = '⚠ Network error.';
+          armRecordButton(q);
+        }
+      });
+      btn.dataset.state = 'rec';
+      btn.classList.add('danger-btn');
+      btn.textContent = '■ Stop';
+      $('ivStatus').textContent = '🔴 Listening…';
+    } catch (e) {
+      $('ivStatus').textContent = '⚠ Microphone access denied.';
+    }
+  });
+}
+
+async function finishInterview() {
+  $('ivQuestion').textContent = 'Thank you — updating your preferences…';
+  $('ivControls').innerHTML = '';
+  $('ivProgress').textContent = 'Almost done';
+  try {
+    const res = await fetch('/interview/complete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ execEmail: EXEC_EMAIL, answers: ivAnswers }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      $('ivQuestion').textContent = '✅ Your brief is now tuned to this quarter.';
+      $('ivStatus').textContent = 'Changes take effect tomorrow morning.';
+    } else {
+      $('ivQuestion').textContent = '⚠ ' + (data.error || 'Could not save.');
+    }
+  } catch (e) {
+    $('ivQuestion').textContent = '⚠ Network error saving preferences.';
+  }
+  $('ivControls').innerHTML = '<button class="primary-btn" id="ivDone">Close</button>';
+  $('ivDone').addEventListener('click', () => $('modalBg').classList.remove('show'));
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────────
+loadBrief();
+</script>
+</body>
+</html>
